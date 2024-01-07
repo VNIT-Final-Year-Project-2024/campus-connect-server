@@ -1,0 +1,25 @@
+{
+  "name": "campus-connect-project",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1530.0",
+    "bcrypt": "^5.1.1",
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "http-errors": "~1.6.3",
+    "mongodb": "^6.3.0",
+    "morgan": "~1.9.1",
+    "mysql2": "^3.6.5",
+    "node-cache": "^5.1.2",
+    "nodemailer": "^6.9.8",
+    "nodemon": "^3.0.2",
+    "otp-generator": "^4.0.1",
+    "redis": "^4.6.12"
+  }
+}

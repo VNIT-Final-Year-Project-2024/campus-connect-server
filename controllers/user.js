@@ -20,7 +20,12 @@ const verifyStudent = (req, res) => {
         return;
       }
       if(results.length !== 0 || results[0]) {
-        res.status(409).send({'message': 'user with email already exists'});
+        // TODO: build logic to handle this response for frontend (redux + axios)
+        // res.status(409).send({'message': 'user with email already exists'});
+        res.send({
+          'status': 409,
+          'message': 'user with email already exists'
+        })
         return;
       } else {
         console.log(`User: ${req.body.name} requested OTP`);
@@ -47,7 +52,12 @@ const verifyFaculty = (req, res) => {
         return;
       }
       if(results.length != 0 || results[0]) {
-        res.status(409).send({'message': 'user with email already exists'});
+        // TODO: build logic to handle this response for frontend (redux + axios)
+        // res.status(409).send({'message': 'user with email already exists'});
+        res.send({
+          'status': 409,
+          'message': 'user with email already exists'
+        })
         return;
       } else {
         console.log(`User: ${req.body.name} requested OTP`);

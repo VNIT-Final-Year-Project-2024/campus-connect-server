@@ -7,23 +7,55 @@ const { validateRequest } = require('../utils/requestValidator');
 const verifyStudent = (req, res) => {
   // validate request body
   let requiredFields = ['emailPrefix', 'name', 'password', 'studentId'];
+
   if (validateRequest(req, res, requiredFields)) {
-    console.log(`User: ${req.body.name} requested OTP`);
-    // generate OTP for student mail verification
-    otpGen.generateOtp(req, res, 'student');
+
+    let email = req.body.emailPrefix + '@students.vnit.ac.in';
+    // SQL query to find student
+    let query = `SELECT * FROM student WHERE email = '${email}' LIMIT 1`;
+    // using the executeQuery function
+    executeQuery(query, async (error, results) => {
+      if (error) {
+        res.status(500).json(error);
+        return;
+      }
+      if(results.length !== 0 || results[0]) {
+        res.status(409).send({'message': 'user with email already exists'});
+        return;
+      } else {
+        console.log(`User: ${req.body.name} requested OTP`);
+        // generate OTP for student mail verification
+        otpGen.generateOtp(req, res, 'student');
+      }
+    });
   }
-  return;
 };
 
 const verifyFaculty = (req, res) => {
   // validate request body
   let requiredFields = ['emailPrefix', 'name', 'password', 'facultyId', 'dept'];
+
   if (validateRequest(req, res, requiredFields)) {
-    console.log(`User: ${req.body.name} requested OTP`);
-    // generate OTP for faculty mail verification
-    otpGen.generateOtp(req, res, 'faculty');
+
+    let email = req.body.emailPrefix + '@' + req.body.dept + '.vnit.ac.in';
+    // SQL query to find student
+    let query = `SELECT * FROM faculty WHERE email = '${email}' LIMIT 1`;
+    // using the executeQuery function
+    executeQuery(query, async (error, results) => {
+      if (error) {
+        res.status(500).json(error);
+        return;
+      }
+      if(results.length != 0 || results[0]) {
+        res.status(409).send({'message': 'user with email already exists'});
+        return;
+      } else {
+        console.log(`User: ${req.body.name} requested OTP`);
+        // generate OTP for faculty mail verification
+        otpGen.generateOtp(req, res, 'faculty');
+      }
+    });
   }
-  return;
 };
 
 const addStudent = async (req, res) => {
@@ -56,7 +88,6 @@ const addStudent = async (req, res) => {
       });
     }
   }
-  return;
 }
 
 const addFaculty = async (req, res) => {
@@ -89,7 +120,6 @@ const addFaculty = async (req, res) => {
       });
     }
   }
-  return;
 }
 
 const loginStudent = async (req, res) => {
@@ -145,7 +175,6 @@ const loginStudent = async (req, res) => {
       });
     });
   }
-  return;
 }
 
 const loginFaculty = async (req, res) => {
@@ -202,7 +231,6 @@ const loginFaculty = async (req, res) => {
       });
     });
   }
-  return;
 }
 
 // export the controller function for use in Express routes

@@ -9,6 +9,7 @@ generateOtp = (req, res, type) => {
     var email;
 
     const otp = otpGenerator.generate(6, { upperCase: false, specialChars: false });
+    console.log(`OTP: ${otp} for User: ${req.body.name}`);
 
     // TODO: this logic needs to be better
     if(type === 'student') {
@@ -18,6 +19,7 @@ generateOtp = (req, res, type) => {
         email = obj.emailPrefix + '@' + obj.dept + '.vnit.ac.in';
     } else {
         res.status(500).error('Incorrect type');
+        return;
     }
 
     // send email to user's mail address
@@ -30,6 +32,7 @@ generateOtp = (req, res, type) => {
 
     // send the token as the response
     res.send({'token': `${token}`});
+    return;
 }
 
 // fucntion to retrieve user details for token from request and check OTP
@@ -44,13 +47,16 @@ checkOtp = (req, res) => {
                 return user;                            // successful login 
             } else {
                 res.json({ status: 'incorrect' });      // incorrect OTP
+                return;
             }
         } else {
             res.json({ status: 'timeout' });            // OTP timeout
+            return;
         }
     } catch (error) {
         console.log(error);
         res.status(500).json(error);
+        return;
     }
 }
 

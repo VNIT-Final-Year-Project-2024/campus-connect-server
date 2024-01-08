@@ -32,8 +32,10 @@ const sendMail = (toEmail, otp) => {
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
       console.error('Error sending mail:', error);
+      return;
     } else {
       console.log('Mail sent:', info.response);
+      return;
     }
   });
 };

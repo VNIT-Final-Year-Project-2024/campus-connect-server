@@ -20,12 +20,7 @@ const verifyStudent = (req, res) => {
         return;
       }
       if(results.length !== 0 || results[0]) {
-        // TODO: build logic to handle this response for frontend (redux + axios)
-        // res.status(409).send({'message': 'user with email already exists'});
-        res.send({
-          'status': 409,
-          'message': 'user with email already exists'
-        })
+        res.status(409).send({'message': 'user with email already exists'});
         return;
       } else {
         console.log(`User: ${req.body.name} requested OTP`);
@@ -52,12 +47,7 @@ const verifyFaculty = (req, res) => {
         return;
       }
       if(results.length != 0 || results[0]) {
-        // TODO: build logic to handle this response for frontend (redux + axios)
-        // res.status(409).send({'message': 'user with email already exists'});
-        res.send({
-          'status': 409,
-          'message': 'user with email already exists'
-        })
+        res.status(409).send({'message': 'user with email already exists'});
         return;
       } else {
         console.log(`User: ${req.body.name} requested OTP`);
@@ -78,7 +68,7 @@ const addStudent = async (req, res) => {
 
     if (user) {
       let query;
-      var {studentId, emailPrefix, name, password} = user;
+      let {studentId, emailPrefix, name, password} = user;
       let passwordHash = await bcrypt.hash(password, 10);
       let email = emailPrefix + '@students.vnit.ac.in';
       
@@ -94,7 +84,6 @@ const addStudent = async (req, res) => {
         // send the results as JSON
         res.json({'status': 'success'});
         console.log(`User: ${name} added in student DB`);
-        return;
       });
     }
   }
@@ -126,7 +115,6 @@ const addFaculty = async (req, res) => {
         // send the results as JSON
         res.json({'status': 'success'});
         console.log(`User: ${name} added in faculty DB`);
-        return;
       });
     }
   }

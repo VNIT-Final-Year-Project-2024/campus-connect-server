@@ -22,8 +22,6 @@ const executeQuery = (query, callback) => {
       return;
     }
 
-    console.log(`Connected to MySQL user DB with con ${connection.threadId}`);
-
     connection.query(query, (queryError, results) => {
       connection.release();
 

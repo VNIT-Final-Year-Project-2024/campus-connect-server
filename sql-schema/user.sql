@@ -1,0 +1,13 @@
+-- USER schema
+CREATE TABLE user (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    about VARCHAR(50) DEFAULT NULL,
+    type VARCHAR(7) NOT NULL CHECK (type IN ('student', 'faculty')),
+    avatar VARCHAR(255) DEFAULT NULL,
+    details INT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (details) REFERENCES student(id) ON DELETE CASCADE
+);

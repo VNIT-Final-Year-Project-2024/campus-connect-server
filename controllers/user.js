@@ -74,7 +74,7 @@ const addStudent = async (req, res) => {
       let email = emailPrefix + '@students.vnit.ac.in';
       
       // SQL query to insert student metadata
-      let query1 = `INSERT INTO student (student_id, dept) VALUES ("${studentId}", "${dept}");`;
+      let query1 = `INSERT INTO student (student_id, dept) VALUES ("${studentId}", "${dept.toUpperCase()}");`;
       // using the executeQuery function
       executeQuery(query1, (error, results) => {
         if (error) {
@@ -117,7 +117,7 @@ const addFaculty = async (req, res) => {
       let email = emailPrefix + '@' + user.dept + '.vnit.ac.in';
 
       // SQL query to insert faculty metadata
-      query = `INSERT INTO faculty (faculty_id, dept) VALUES ("${facultyId}", "${dept}");`;
+      query = `INSERT INTO faculty (faculty_id, dept) VALUES ("${facultyId}", "${dept.toUpperCase()}");`;
       // using the executeQuery function
       executeQuery(query, (error, results) => {
         if (error) {

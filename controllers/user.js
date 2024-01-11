@@ -82,7 +82,6 @@ const addStudent = async (req, res) => {
           return;
         }
 
-        console.log(results);
         let { insertId: rowId } = results;
         // SQL query to insert user data
         let query2 = `INSERT INTO user (email, name, password, details, type) VALUES ("${email}", "${name}", "${passwordHash}", "${rowId}", "student");`;
@@ -117,9 +116,9 @@ const addFaculty = async (req, res) => {
       let email = emailPrefix + '@' + user.dept + '.vnit.ac.in';
 
       // SQL query to insert faculty metadata
-      query = `INSERT INTO faculty (faculty_id, dept) VALUES ("${facultyId}", "${dept.toUpperCase()}");`;
+      query1 = `INSERT INTO faculty (faculty_id, dept) VALUES ("${facultyId}", "${dept.toUpperCase()}");`;
       // using the executeQuery function
-      executeQuery(query, (error, results) => {
+      executeQuery(query1, (error, results) => {
         if (error) {
           res.status(500).json(error);
           return;

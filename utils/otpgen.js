@@ -8,7 +8,7 @@ generateOtp = (req, res, type) => {
     var obj = req.body; 
     var email;
 
-    const otp = otpGenerator.generate(6, { upperCase: false, specialChars: false });
+    const otp = otpGenerator.generate(6, { lowerCaseAlphabets: false, upperCaseAlphabets: false, specialChars: false });
     console.log(`OTP: ${otp} for User: ${req.body.name}`);
 
     // TODO: this logic needs to be better

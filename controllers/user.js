@@ -3,6 +3,7 @@ const otpGen = require('../utils/otpgen');
 const bcrypt = require('bcrypt');
 const { generateToken } = require('../utils/tokengen');
 const { validateRequest } = require('../utils/requestValidator');
+const { generateJwt } = require('../utils/jwtGenerator');
 
 const verifyStudent = (req, res) => {
 
@@ -184,9 +185,7 @@ const loginUser = async (req, res) => {
         } else if (result) {
           // passwords match
           userResponse.status = 'success';
-          userResponse.token = generateToken(userResponse);
-          console.log(`User: ${userResponse.name} logged in`);
-          res.json(userResponse);
+          generateJwt(userResponse, res);
           return;
         } else {
           // passwords do not match

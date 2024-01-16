@@ -197,9 +197,36 @@ const loginUser = async (req, res) => {
   }
 }
 
+const searchUser = async (req, res) => {
+  // validate request body
+  const requiredFields = ['string'];
+  if (validateRequest(req, res, requiredFields)) {
+    let string = req.body.string;
+
+    // SQL query to find student
+    let query = `SELECT id, name, avatar FROM user WHERE name LIKE '${string}%' LIMIT 5`;
+    // using the executeQuery function
+    executeQuery(query, async (error, results) => {
+      if (error) {
+        res.status(500).json(error);
+        return;
+      }
+    
+      // Mapping the results to a simplified JSON format
+      const users = results.map(user => ({
+        id: user.id,
+        name: user.name,
+        avatar: user.avatar
+      }));
+
+      res.status(200).json(users);
+    })
+  }
+}
+
 // export the controller function for use in Express routes
 module.exports = { 
   verifyStudent, addStudent,
   verifyFaculty, addFaculty,
-  loginUser,
+  loginUser, searchUser
 };

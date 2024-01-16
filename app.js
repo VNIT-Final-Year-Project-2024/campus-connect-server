@@ -15,8 +15,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// mount user router
+// mount routers
 const userRoute = require('./routes/userRoute');
+const messageRoute = require('./routes/messageRoute');
 app.use('/users', userRoute);
+app.use('/messages', messageRoute);
 
 module.exports = app;

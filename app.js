@@ -18,7 +18,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 // mount routers
 const userRoute = require('./routes/userRoute');
 const messageRoute = require('./routes/messageRoute');
+const groupRoute = require('./routes/groupRoute');
 app.use('/users', userRoute);
 app.use('/messages', messageRoute);
+app.use('/groups', groupRoute);
 
 module.exports = app;

@@ -35,30 +35,38 @@ const sendMessage = (req, res) => {
   }
 }
 
+// view messages from a group
 const viewMessages = async (req, res) => {
 
   // validate request body
-  let requiredFields = ['groupId', 'page'];
+  let requiredFields = ['groupId', 'timestamp'];
 
   if (validateRequest(req, res, requiredFields)) {
 
-    let pageSize = 10;
-    let pageNumber = parseInt(req.body.page);
-
-    if(pageNumber < 1) {
-      res.status(400).send({ message: 'page cannot be less than 1' });
-      return;
-    }
+    let pageSize = 10;                                               // page size for messages
+    let timestamp = new Date(req.body.timestamp);
 
     try {
-      const messages = await Message.find({ group_id: req.body.groupId })
+      const results = await Message.find({
+        group_id: req.body.groupId,
+        timestamp: { $lt: timestamp }                                 // retrieve messages older than the provided timestamp
+      })
         .sort({ timestamp: -1 })
-        .skip(pageSize * (pageNumber - 1))
-        .limit(pageSize);
+        .limit(pageSize)
+        .select('_id sender group_id content timestamp');
 
-      if (messages.length === 0) {
+      if (results.length === 0) {
         res.status(200).json({ status: 'empty' });
       } else {
+
+        const messages = results.map(({ _id, sender, group_id, content, timestamp }) => ({
+          messageId: _id,
+          sender: sender,
+          groupId: group_id,
+          content: content,
+          timestamp: timestamp
+        }));
+
         res.status(200).json({ status: 'success', messages: messages });
       }
     } catch (error) {

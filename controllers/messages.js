@@ -57,7 +57,7 @@ const viewMessages = async (req, res) => {
         .limit(pageSize);
 
       if (messages.length === 0) {
-        res.status(200).json({ status: 'not found' });
+        res.status(200).json({ status: 'empty' });
       } else {
         res.status(200).json({ status: 'success', messages: messages });
       }

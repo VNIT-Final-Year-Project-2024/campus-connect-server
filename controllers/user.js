@@ -198,13 +198,21 @@ const loginUser = async (req, res) => {
 }
 
 const searchUser = async (req, res) => {
-  // validate request body
-  const requiredFields = ['string'];
-  if (validateRequest(req, res, requiredFields)) {
-    let string = req.body.string;
+  
+  let searchString = req.query.string;
+
+  // use a regular expression to reject cases like 'string' or "string"
+  const pattern = /^['"][^'"]*['"]$/;
+  
+  if (!searchString) {
+    res.status(400).send({ message: "search string should be present in the request" });
+    return;
+  } else if (pattern.test(searchString)) {
+    res.status(400).send({ message: "do not enclose the string in quotes" });
+  } else {
 
     // SQL query to find student
-    let query = `SELECT id, name, avatar FROM user WHERE name LIKE '${string}%' LIMIT 5`;
+    let query = `SELECT id, name, avatar FROM user WHERE name LIKE '${searchString}%' LIMIT 5`;
     // using the executeQuery function
     executeQuery(query, async (error, results) => {
       if (error) {

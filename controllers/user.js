@@ -212,7 +212,7 @@ const searchUser = async (req, res) => {
   } else {
 
     // SQL query to find student
-    let query = `SELECT id, name, avatar FROM user WHERE name LIKE '${searchString}%' LIMIT 5`;
+    let query = `SELECT id, name, avatar FROM user WHERE name LIKE "${searchString}%" LIMIT 5`;
     // using the executeQuery function
     executeQuery(query, async (error, results) => {
       if (error) {

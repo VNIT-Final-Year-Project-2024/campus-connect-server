@@ -6,7 +6,7 @@ const { validateRequest } = require('../utils/requestValidator');
 const { validateArray } = require('../utils/objArrayValidator');
 
 // create new group (add requesting user to the group)
-const newUserGroup = (req, res) => {
+const newUserGroup = async (req, res) => {
     // validate request body
     let requiredFields = ['otherMember'];
 
@@ -23,20 +23,43 @@ const newUserGroup = (req, res) => {
 
             members.push({ id: req.user.id, name: req.user.name });
 
-            let group = new Group({
-                is_chatroom: false,
-                members: members,
-            })
+            let id1 = members[0].id;
+            let id2 = members[1].id;
 
-            group.save()
-                .then(createdGroup => {
-                    console.log('User:', req.user.name, 'created a user group with', req.body.otherMember.name, );
-                    res.send({ status: 'success', groupId: createdGroup._id });
-                })
-                .catch(error => {
-                    console.error('Error creating user group:', error);
-                    res.status(500).send({ status: 'failed' });
+            try {
+                const groups = await Group.find({
+                    is_chatroom: false,
+                    members: {
+                        $all: [
+                            { $elemMatch: { id: id1 } },
+                            { $elemMatch: { id: id2 } }
+                        ]
+                    }
                 });
+
+                if (groups.length > 0) {
+                    res.status(409).send({ message: 'user group already exists' });
+                } else {
+                    let group = new Group({
+                        is_chatroom: false,
+                        members: members,
+                    })
+
+                    group.save()
+                        .then(createdGroup => {
+                            console.log('User:', req.user.name, 'created a user group with', req.body.otherMember.name,);
+                            res.send({ status: 'success', groupId: createdGroup._id });
+                        })
+                        .catch(error => {
+                            console.error('Error creating user group:', error);
+                            res.status(500).send({ status: 'failed' });
+                        });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                res.status(500).send('Internal Server Error');
+            }
+
         } else {
             res.status(400).send({ message: 'user group not defined properly' });
         }

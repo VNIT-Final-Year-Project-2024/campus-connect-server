@@ -6,7 +6,44 @@ const { validateRequest } = require('../utils/requestValidator');
 const { validateArray } = require('../utils/objArrayValidator');
 
 // create new group (add requesting user to the group)
-const newGroup = (req, res) => {
+const newUserGroup = (req, res) => {
+    // validate request body
+    let requiredFields = ['otherMember'];
+
+    if (validateRequest(req, res, requiredFields)) {
+        let memberParams = ['id', 'name'];
+        if (validateArray(req.body.otherMember, memberParams)) {
+            let memberSize = req.body.otherMembers.length;
+            if (memberSize === 0) {
+                res.status(400).send({ message: 'member not defined properly' });
+                return;
+            }
+
+            let members = req.body.otherMember;
+            members.push({ id: req.user.id, name: req.user.name });
+
+            let group = new Group({
+                is_chatroom: false,
+                members: members,
+            })
+
+            group.save()
+                .then(createdGroup => {
+                    console.log('User:', req.user.name, 'created a user group with', req.body.otherMember.name, );
+                    res.send({ status: 'success', groupId: createdGroup._id });
+                })
+                .catch(error => {
+                    console.error('Error creating user group:', error);
+                    res.status(500).send({ status: 'failed' });
+                });
+        } else {
+            res.status(400).send({ message: 'group not defined properly' });
+        }
+    }
+}
+
+// create new group (add requesting user to the group)
+const newChatroomGroup = (req, res) => {
     // validate request body
     let requiredFields = ['name', 'desc', 'otherMembers'];
 
@@ -18,25 +55,24 @@ const newGroup = (req, res) => {
                 res.status(400).send({ message: 'members not defined properly' });
                 return;
             }
-            let isChatroom = (memberSize === 1) ? false : true;
 
             let members = req.body.otherMembers;
             members.push({ id: req.user.id, name: req.user.name });
 
             let group = new Group({
                 name: req.body.name,
-                is_chatroom: isChatroom,
+                is_chatroom: true,
                 members: members,
                 description: req.body.desc,
             })
 
             group.save()
                 .then(createdGroup => {
-                    console.log('Group: ', createdGroup.name, 'created by User: ', req.user.name);
+                    console.log('User: ', req.user.name, 'created a chatroom group: ', createdGroup.name);
                     res.send({ status: 'success', groupId: createdGroup._id });
                 })
                 .catch(error => {
-                    console.error('Error saving message:', error);
+                    console.error('Error creating chatroom group:', error);
                     res.status(500).send({ status: 'failed' });
                 });
         } else {
@@ -209,7 +245,6 @@ const showChatroomGroups = async (req, res) => {
 
 
 module.exports = {
-    newGroup,
-    showUserGroups,
-    showChatroomGroups
+    newUserGroup, newChatroomGroup,
+    showUserGroups, showChatroomGroups
 }

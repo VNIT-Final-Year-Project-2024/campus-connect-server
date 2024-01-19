@@ -4,8 +4,11 @@ const groupController = require('../controllers/groups');
 const authMiddleware = require('../middlewares/authMiddleware');
 const timeMiddleware = require('../middlewares/timeMiddleware');
 
-// create group route
-router.post('/create', authMiddleware, groupController.newGroup);
+// create user group route
+router.post('/create/user', authMiddleware, groupController.newUserGroup);
+
+// create chatroom group route
+router.post('/create/chatroom', authMiddleware, groupController.newChatroomGroup);
 
 // view user groups route
 router.get('/view/users', authMiddleware, timeMiddleware, groupController.showUserGroups);

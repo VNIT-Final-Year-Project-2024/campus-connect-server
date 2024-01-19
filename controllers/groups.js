@@ -12,14 +12,15 @@ const newUserGroup = (req, res) => {
 
     if (validateRequest(req, res, requiredFields)) {
         let memberParams = ['id', 'name'];
-        if (validateArray(req.body.otherMember, memberParams)) {
-            let memberSize = req.body.otherMembers.length;
-            if (memberSize === 0) {
+        let members = [];
+        members.push(req.body.otherMember);
+        if (validateArray(members, memberParams)) {
+            let memberSize = members.length;
+            if (memberSize !== 1) {
                 res.status(400).send({ message: 'member not defined properly' });
                 return;
             }
 
-            let members = req.body.otherMember;
             members.push({ id: req.user.id, name: req.user.name });
 
             let group = new Group({
@@ -37,7 +38,7 @@ const newUserGroup = (req, res) => {
                     res.status(500).send({ status: 'failed' });
                 });
         } else {
-            res.status(400).send({ message: 'group not defined properly' });
+            res.status(400).send({ message: 'user group not defined properly' });
         }
     }
 }
@@ -76,7 +77,7 @@ const newChatroomGroup = (req, res) => {
                     res.status(500).send({ status: 'failed' });
                 });
         } else {
-            res.status(400).send({ message: 'members not defined properly' });
+            res.status(400).send({ message: 'chatroom group not defined properly' });
         }
     }
 }

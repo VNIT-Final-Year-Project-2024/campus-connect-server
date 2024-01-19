@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
 
 const groupSchema = new mongoose.Schema({
-  name: { type: String, maxlength: 30, required: true },
+  name: { type: String, maxlength: 30 },
   is_chatroom: { type: Boolean },
   members: [{ id: Number, name: String }],
-  description: { type: String, required: true },
+  description: { type: String },
   avatar: { type: String },
   created_at: { type: Date, default: Date.now },
 });

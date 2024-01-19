@@ -38,31 +38,30 @@ const sendMessage = (req, res) => {
 // view messages from a group
 const viewMessages = async (req, res) => {
 
-  // validate request body
-  let requiredFields = ['groupId', 'timestamp'];
+  // validate request query params
+  const requiredParams = ['groupId'];
 
-  if (validateRequest(req, res, requiredFields)) {
+  if (validateQueryParams(req, res, requiredParams)) {
 
     let pageSize = 10;                                               // page size for messages
-    let timestamp = new Date(req.body.timestamp);
+    let timestamp = new Date(req.timestamp);
 
     try {
       const results = await Message.find({
-        group_id: req.body.groupId,
+        group_id: req.query.groupId,
         timestamp: { $lt: timestamp }                                 // retrieve messages older than the provided timestamp
       })
         .sort({ timestamp: -1 })
         .limit(pageSize)
-        .select('_id sender group_id content timestamp');
+        .select('_id sender content timestamp');
 
       if (results.length === 0) {
         res.status(200).json({ status: 'empty' });
       } else {
 
-        const messages = results.map(({ _id, sender, group_id, content, timestamp }) => ({
+        const messages = results.map(({ _id, sender, content, timestamp }) => ({
           messageId: _id,
           sender: sender,
-          groupId: group_id,
           content: content,
           timestamp: timestamp
         }));

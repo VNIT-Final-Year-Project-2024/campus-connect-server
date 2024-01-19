@@ -47,11 +47,11 @@ const newGroup = (req, res) => {
 
 // view user groups for a user
 const showUserGroups = async (req, res) => {
-    // validate request body
-    let requiredFields = ['timestamp'];
+    // validate request header
+    let requiredFields = [];
 
-    if (validateRequest(req, res, requiredFields)) {
-        let timestamp = new Date(req.body.timestamp);
+    if (validateQueryParams(req, res, requiredFields)) {
+        let timestamp = new Date(req.timestamp);
         let pageSize = 10;                                          // page size for groups
         let userId = req.user.id;
 
@@ -129,10 +129,10 @@ const showUserGroups = async (req, res) => {
 // view chatroom groups for a user
 const showChatroomGroups = async (req, res) => {
     // validate request body
-    let requiredFields = ['timestamp'];
+    let requiredFields = [];
 
-    if (validateRequest(req, res, requiredFields)) {
-        let timestamp = new Date(req.body.timestamp);
+    if (validateQueryParams(req, res, requiredFields)) {
+        let timestamp = new Date(req.timestamp);
         let pageSize = 10;                                          // page size for groups
         let userId = req.user.id;
 

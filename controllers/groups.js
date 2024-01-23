@@ -164,15 +164,29 @@ const showUserGroups = async (req, res) => {
             // filter recent messages based on matching groups and convert ObjectId to string
             const groups = recentMessages
                 .filter(message => matchingGroups.some(group => group._id.equals(message.group_id)))
-                .map(({ _id, group_id, sender, content, timestamp }) => ({
-                    groupId: group_id.toString(),
-                    recentMessage: {
-                        messageId: _id.toString(),
-                        sender: sender,
-                        content,
-                        timestamp
-                    }
-                }));
+                .map(({ _id, group_id, sender, content, timestamp }) => {
+
+                    // find the matching group based on group_id
+                    const matchingGroup = matchingGroups.find((group) =>
+                        group._id.equals(group_id)
+                    );
+
+                    // pick the name - for client rendering
+                    const otherMember = matchingGroup.members.find(
+                        (member) => member.id !== userId
+                    );
+
+                    return {
+                        groupId: group_id.toString(),
+                        otherMemberName: otherMember.name,
+                        recentMessage: {
+                            messageId: _id.toString(),
+                            sender: sender,
+                            content,
+                            timestamp
+                        },
+                    };
+                });
 
             if (groups.length === 0) {
                 res.status(200).json({ status: 'empty' });

@@ -16,4 +16,10 @@ router.get('/view/users', authMiddleware, timeMiddleware, groupController.showUs
 // view chatroom groups route
 router.get('/view/chatrooms', authMiddleware, timeMiddleware, groupController.showChatroomGroups);
 
+// search chatroom groups route
+router.get('/search/users', authMiddleware, timeMiddleware, groupController.searchUserGroups);
+
+// search chatroom groups route
+router.get('/search/chatrooms', authMiddleware, timeMiddleware, groupController.searchChatroomGroups);
+
 module.exports = router;

@@ -156,7 +156,6 @@ const showUserGroups = async (req, res) => {
 
         // execute the aggregation pipeline for recent messages for user
         const recentUserMessages = await Message.aggregate(recentMessagesPipeline);
-        console.log(recentUserMessages);
 
         // map the results to the desired response structure
         const groups = recentUserMessages.map(({ _id, group_id, sender, content, timestamp }) => {
@@ -248,7 +247,6 @@ const showChatroomGroups = async (req, res) => {
 
         // execute the aggregation pipeline for recent messages for user
         const recentUserMessages = await Message.aggregate(recentMessagesPipeline);
-        console.log(recentUserMessages);
 
         // map the results to the desired response structure
         const groups = matchingGroups.map(matchingGroup => {
@@ -273,7 +271,7 @@ const showChatroomGroups = async (req, res) => {
                     avatar: avatar
                 };
             } else {
-                // If no recent messages, include the group with created_at field
+                // if no recent messages, include the group with created_at field
                 return {
                     groupId: group_id,
                     name: name,
@@ -294,7 +292,224 @@ const showChatroomGroups = async (req, res) => {
     }
 };
 
+// search user groups for a user based on string provided
+const searchUserGroups = async (req, res) => {
+
+    // validate request query params
+    const requiredParams = ['string'];
+
+    if (validateQueryParams(req, res, requiredParams)) {
+
+        let searchString = req.query.string;
+
+        let timestamp = new Date(req.timestamp);
+        let pageSize = 10;
+        let userId = req.user.id;
+
+        try {
+            // find groups that match members.id with the user's id, is_chatroom is false, and other member's name contains searchString
+            const matchingGroupsPipeline = [
+                {
+                    $match: {
+                        'members.id': userId,
+                        is_chatroom: false,
+                        members: {
+                            $elemMatch: {
+                                id: { $ne: userId },
+                                name: { $regex: searchString, $options: 'i' }       // case-insensitive search
+                            }
+                        }
+                    }
+                },
+                {
+                    $sort: { created_at: -1 }
+                }
+            ];
+
+            // execute the aggregation pipeline for matching groups
+            const matchingGroups = await Group.aggregate(matchingGroupsPipeline);
+
+            // extract group IDs from matching groups
+            const groupIds = matchingGroups.map(group => group._id);
+
+            // find recent messages with a unique group_id directly in the database
+            const recentMessagesPipeline = [
+                {
+                    $match: {
+                        group_id: { $in: groupIds },
+                        timestamp: { $lt: timestamp }
+                    }
+                },
+                {
+                    $sort: { timestamp: -1 }
+                },
+                {
+                    $group: {
+                        _id: '$group_id',
+                        latestMessage: { $first: '$$ROOT' }
+                    }
+                },
+                {
+                    $replaceRoot: { newRoot: '$latestMessage' }
+                },
+                {
+                    $limit: pageSize
+                }
+            ];
+
+            // execute the aggregation pipeline for recent messages for user
+            const recentUserMessages = await Message.aggregate(recentMessagesPipeline);
+
+            // map the results to the desired response structure
+            const groups = matchingGroups.map(matchingGroup => {
+                const group_id = matchingGroup._id.toString();
+                const avatar = matchingGroup.avatar;
+
+                // check if there are recent messages for the group
+                const recentMessage = recentUserMessages.find(message => message.group_id.equals(matchingGroup._id));
+
+                // get member of the group (other than the user) based on search string
+                const otherMember = matchingGroup.members.find(
+                    (member) => member.id !== userId
+                );
+
+                if (recentMessage) {
+                    const { _id, sender, content, timestamp } = recentMessage;
+                    return {
+                        groupId: group_id,
+                        name: otherMember.name,
+                        recentMessage: {
+                            messageId: _id.toString(),
+                            sender: sender,
+                            content,
+                            timestamp
+                        },
+                        avatar: avatar
+                    };
+                }
+            });
+
+            if (groups.length === 0) {
+                res.status(200).json({ status: 'empty' });
+            } else {
+                res.status(200).json({ status: 'success', groups: groups });
+            }
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ status: 'failed' });
+        }
+    }
+};
+
+// search chatroom groups for a user based on string provided
+const searchChatroomGroups = async (req, res) => {
+
+    // validate request query params
+    const requiredParams = ['string'];
+
+    if (validateQueryParams(req, res, requiredParams)) {
+
+        let searchString = req.query.string;
+        let timestamp = new Date(req.timestamp);
+        let pageSize = 10;
+        let userId = req.user.id;
+
+        try {
+            // find groups that match members.id with user's id, sort by created_at, and is_chatroom is true
+            const matchingGroupsPipeline = [
+                {
+                    $match: {
+                        'members.id': userId,
+                        is_chatroom: true,
+                        name: { $regex: searchString, $options: 'i' }      // case-insensitive search
+                    }
+                },
+                {
+                    $sort: { created_at: -1 }
+                }
+            ];
+
+            // execute the aggregation pipeline for matching groups
+            const matchingGroups = await Group.aggregate(matchingGroupsPipeline);
+
+            // extract group IDs from matching groups
+            const groupIds = matchingGroups.map(group => group._id);
+
+            // find recent messages with a unique group_id directly in the database
+            const recentMessagesPipeline = [
+                {
+                    $match: {
+                        group_id: { $in: groupIds },
+                        timestamp: { $lt: timestamp }
+                    }
+                },
+                {
+                    $sort: { timestamp: -1 }
+                },
+                {
+                    $group: {
+                        _id: '$group_id',
+                        latestMessage: { $first: '$$ROOT' }
+                    }
+                },
+                {
+                    $replaceRoot: { newRoot: '$latestMessage' }
+                },
+                {
+                    $limit: pageSize
+                }
+            ];
+
+            // execute the aggregation pipeline for recent messages for user
+            const recentUserMessages = await Message.aggregate(recentMessagesPipeline);
+
+            // map the results to the desired response structure
+            const groups = matchingGroups.map(matchingGroup => {
+                const group_id = matchingGroup._id.toString();
+                const avatar = matchingGroup.avatar;
+                const name = matchingGroup.name;
+
+                // check if there are recent messages for the group
+                const recentMessage = recentUserMessages.find(message => message.group_id.equals(matchingGroup._id));
+
+                if (recentMessage) {
+                    const { _id, sender, content, timestamp } = recentMessage;
+                    return {
+                        groupId: group_id,
+                        name: name,
+                        recentMessage: {
+                            messageId: _id.toString(),
+                            sender: sender,
+                            content,
+                            timestamp
+                        },
+                        avatar: avatar
+                    };
+                } else {
+                    // if no recent messages, include the group with created_at field
+                    return {
+                        groupId: group_id,
+                        name: name,
+                        avatar: avatar,
+                        created_at: matchingGroup.created_at
+                    };
+                }
+            });
+
+            if (groups.length === 0) {
+                res.status(200).json({ status: 'empty' });
+            } else {
+                res.status(200).json({ status: 'success', groups: groups });
+            }
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ status: 'failed' });
+        }
+    }
+};
+
 module.exports = {
     newUserGroup, newChatroomGroup,
-    showUserGroups, showChatroomGroups
+    showUserGroups, showChatroomGroups,
+    searchUserGroups, searchChatroomGroups
 }

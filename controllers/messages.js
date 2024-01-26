@@ -1,6 +1,7 @@
 const mongoose = require('../utils/mongoConnector');
 const Message = require('../models/messages');
 const { validateRequest } = require('../utils/requestValidator');
+const { sendUpdateToGroup } = require('../socketApp');
 
 // send message into a group
 const sendMessage = (req, res) => {
@@ -25,6 +26,13 @@ const sendMessage = (req, res) => {
 
     message.save()
       .then(savedMessage => {
+        let msgUpdate = {
+          messageId: savedMessage.id,
+          sender: savedMessage.sender,
+          content: savedMessage.content,
+          timestamp: savedMessage.timestamp
+        };
+        sendUpdateToGroup(req.body.groupId, msgUpdate);
         console.log('Message from', savedMessage.sender.name, 'sent:', savedMessage.content);
         res.send({ status: 'success' });
       })

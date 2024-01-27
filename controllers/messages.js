@@ -1,5 +1,6 @@
 const mongoose = require('../utils/mongoConnector');
 const Message = require('../models/messages');
+const Group = require('../models/groups');
 const { validateRequest } = require('../utils/requestValidator');
 const { sendUpdateToGroup } = require('../socketApp');
 
@@ -15,31 +16,53 @@ const sendMessage = (req, res) => {
       return;
     }
 
-    let message = new Message({
-      group_id: req.body.groupId,
-      sender: {
-        id: req.user.id,
-        name: req.user.name
-      },
-      content: req.body.content
-    });
+    let groupId = req.body.groupId;
 
-    message.save()
-      .then(savedMessage => {
-        let msgUpdate = {
-          messageId: savedMessage.id,
-          sender: savedMessage.sender,
-          content: savedMessage.content,
-          timestamp: savedMessage.timestamp
-        };
-        sendUpdateToGroup(req.body.groupId, msgUpdate);
-        console.log('Message from', savedMessage.sender.name, 'sent:', savedMessage.content);
-        res.send({ status: 'success' });
-      })
-      .catch(error => {
-        console.error('Error saving message:', error);
-        res.status(500).send({ status: 'failed' });
-      });
+    // check membership of user against the provided group
+    Group.findById(groupId).then(group => {
+
+      if (!group) {
+        console.error('Group not found');
+        res.status(404).send({ message: 'group does not exist' });
+        return;
+      }
+
+      if (group.members.some(member => member.id === req.user.id)) {
+        let message = new Message({
+          group_id: groupId,
+          sender: {
+            id: req.user.id,
+            name: req.user.name
+          },
+          content: req.body.content
+        });
+
+        message.save()
+          .then(savedMessage => {
+            let msgUpdate = {
+              messageId: savedMessage.id,
+              sender: savedMessage.sender,
+              content: savedMessage.content,
+              timestamp: savedMessage.timestamp
+            };
+            sendUpdateToGroup(req.body.groupId, msgUpdate);
+            console.log('Message from user:', savedMessage.sender.name, 'sent:', `"${savedMessage.content}"`, 'to group:', groupId);
+            res.send({ status: 'success' });
+          })
+          .catch(error => {
+            console.error('Error saving message:', error);
+            res.status(500).send({ status: 'failed' });
+          });
+
+      } else {
+        res.status(403).send({ message: 'not a member of the provided group' });
+      }
+
+    }).catch(error => {
+      console.error('Error getting details of group:', error);
+      res.status(500).send('Internal server error');
+      return;
+    });
   }
 }
 

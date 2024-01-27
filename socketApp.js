@@ -1,49 +1,67 @@
-const WebSocket = require('ws');
 const http = require('http');
+const { Server } = require('socket.io');
+const jwt = require('jsonwebtoken');
 
-// Object to store WebSocket connections
+require('dotenv').config();
+
+// object to store Socket.IO connections
 const clients = {};
 
-// Function to initialize WebSocket server
-const initWebSocketServer = (server) => {
-    const wss = new WebSocket.Server({ server, path: '/updates' });
+// function to initialize Socket.IO server
+const initSocketIOServer = (server) => {
+    const io = new Server(server);
 
-    wss.on('connection', (ws, req) => {
-        const groupId = req.url.split('?')[1].split('=')[1];
+    // Socket.IO auth middleware
+    io.use((socket, next) => {
+        if (socket.handshake.headers && socket.handshake.headers.authorization) {
+            // Extract the token from the 'Authorization' header
+            const token = socket.handshake.headers.authorization
+            jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
+                if (err) return next(new Error('Auth token invalid'));
+                socket.user = decoded.user;
+                next();
+            });
+        } else {
+            next(new Error('Auth token missing'));
+        }
+    })
 
-        ws.groupId = groupId;
+    io.on('connection', (socket) => {
+        const { groupId } = socket.handshake.query;
+
+        socket.join(groupId);
         clients[groupId] = clients[groupId] || [];
-        clients[groupId].push(ws);
+        clients[groupId].push(socket);
 
-        console.log(`Client connected to group: ${groupId}`);
+        console.log(`User: ${socket.user.name} connected to group: ${groupId}`);
 
-        ws.on('close', () => {
-            clients[groupId] = clients[groupId].filter(client => client !== ws);
-            console.log(`Client disconnected from group: ${groupId}`);
+        socket.on('disconnect', () => {
+            clients[groupId] = clients[groupId].filter(client => client !== socket);
+            console.log(`User: ${socket.user.name} disconnected from group: ${groupId}`);
         });
     });
 };
 
-// Function to run the WebSocket server
+// function to run the Socket.IO server
 const run = (port, callback) => {
     const server = http.createServer();
-    initWebSocketServer(server);
+    initSocketIOServer(server);
 
     // Start the server and listen on the specified port
     server.listen(port, callback);
 };
 
-// Function to send message to all clients in a group
+// function to send message to all clients in a group
 const sendUpdateToGroup = (groupId, message) => {
     if (clients[groupId]) {
-        clients[groupId].forEach(ws => {
-            ws.send(JSON.stringify({ type: 'message', message }));
+        clients[groupId].forEach(socket => {
+            socket.emit('message', { type: 'message', message });
         });
     }
     console.log(`Update to ${groupId} sent to all connected clients`);
 };
 
-module.exports = { 
-    run, 
-    sendUpdateToGroup 
+module.exports = {
+    run,
+    sendUpdateToGroup
 };

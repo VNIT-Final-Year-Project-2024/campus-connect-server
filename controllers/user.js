@@ -1,7 +1,6 @@
 const { executeQuery } = require('../utils/queryExectutor');
 const otpGen = require('../utils/otpgen');
 const bcrypt = require('bcrypt');
-const { generateToken } = require('../utils/tokengen');
 const { validateRequest } = require('../utils/requestValidator');
 const { validateQueryParams } = require('../utils/queryParamValidator');
 const { generateJwt } = require('../utils/jwtGenerator');
@@ -218,7 +217,7 @@ const searchUser = async (req, res) => {
     } else {
 
       // SQL query to find student
-      let query = `SELECT id, name, avatar FROM user WHERE name LIKE "${searchString}%" AND id != ${req.user.id} LIMIT 5`;
+      let query = `SELECT id, name, email, avatar FROM user WHERE name LIKE "${searchString}%" AND id != ${req.user.id} LIMIT 5`;
       // using the executeQuery function
       executeQuery(query, async (error, results) => {
         if (error) {
@@ -226,10 +225,11 @@ const searchUser = async (req, res) => {
           return;
         }
 
-        // Mapping the results to a simplified JSON format
+        // mapping the results to a simplified JSON format
         const users = results.map(user => ({
           id: user.id,
           name: user.name,
+          email: user.email,
           avatar: user.avatar
         }));
 

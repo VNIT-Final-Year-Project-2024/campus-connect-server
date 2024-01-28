@@ -111,13 +111,12 @@ const addFaculty = async (req, res) => {
     let user = otpGen.checkOtp(req, res);
 
     if (user) {
-      let query;
       var { facultyId, emailPrefix, dept, name, password } = user;
       let passwordHash = await bcrypt.hash(password, 10);
       let email = emailPrefix + '@' + user.dept + '.vnit.ac.in';
 
       // SQL query to insert faculty metadata
-      query1 = `INSERT INTO faculty (faculty_id, dept) VALUES ("${facultyId}", "${dept.toUpperCase()}");`;
+      let query1 = `INSERT INTO faculty (faculty_id, dept) VALUES ("${facultyId}", "${dept.toUpperCase()}");`;
       // using the executeQuery function
       executeQuery(query1, (error, results) => {
         if (error) {
@@ -216,8 +215,8 @@ const searchUser = async (req, res) => {
       res.status(400).send({ message: "do not enclose the string in quotes" });
     } else {
 
-      // SQL query to find student
-      let query = `SELECT id, name, email, avatar FROM user WHERE name LIKE "${searchString}%" AND id != ${req.user.id} LIMIT 5`;
+      // SQL query to find user
+      let query = `SELECT id, name, email, type, avatar FROM user WHERE name LIKE "${searchString}%" AND id != ${req.user.id} LIMIT 5`;
       // using the executeQuery function
       executeQuery(query, async (error, results) => {
         if (error) {
@@ -230,6 +229,7 @@ const searchUser = async (req, res) => {
           id: user.id,
           name: user.name,
           email: user.email,
+          type: user.type,
           avatar: user.avatar
         }));
 
@@ -239,9 +239,70 @@ const searchUser = async (req, res) => {
   }
 }
 
+const fetchUserInfo = async (req, res) => {
+  // validate request query params
+  const requiredParams = ['id'];
+
+  if (validateQueryParams(req, res, requiredParams)) {
+
+    let userId = req.query.id;
+
+    // SQL query to find user
+    let query1 = `SELECT name, email, type, about, avatar, details FROM user WHERE id = ${userId} LIMIT 1`;
+    // using the executeQuery function
+    executeQuery(query1, async (error, result1) => {
+      if (error) {
+        res.status(500).json(error);
+        return;
+      }
+
+      if (result1[0].type === 'student') {
+        // SQL query to find student details
+        let query2 = `SELECT dept, student_id FROM student WHERE id = ${result1[0].details} LIMIT 1`;
+        executeQuery(query2, async (error, result2) => {
+          if (error) {
+            res.status(500).json(error);
+            return;
+          }
+
+          let { name, email, type, about, avatar } = result1[0];
+          let { dept, student_id: studentId } = result2[0];
+
+          // mapping the results to a simplified JSON format
+          const user = {
+            name, email, type, dept, studentId, about, avatar
+          };
+    
+          res.status(200).json(user);
+        })
+      } else {
+        // SQL query to find faculty details
+        let query2 = `SELECT dept, designation FROM faculty WHERE id = ${result1[0].details} LIMIT 1`;
+        executeQuery(query2, async (error, result2) => {
+          if (error) {
+            res.status(500).json(error);
+            return;
+          }
+
+          let { name, email, type, about, avatar } = result1[0];
+          let { dept, designation } = result2[0];
+
+          // mapping the results to a simplified JSON format
+          const user = {
+            name, email, type, dept, designation, about, avatar
+          };
+    
+          res.status(200).json(user);
+        })
+      }
+    })
+  }
+}
+
 // export the controller function for use in Express routes
 module.exports = {
   verifyStudent, addStudent,
   verifyFaculty, addFaculty,
-  loginUser, searchUser
+  loginUser,
+  searchUser, fetchUserInfo
 };

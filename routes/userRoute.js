@@ -13,10 +13,13 @@ router.post('/signup/faculty/auth', userController.addFaculty);
 // user login route
 router.post('/login', userController.loginUser);
 
+// auth middleware - for protected routes
 const authMiddleware = require('../middlewares/authMiddleware');
+
 // user search route
 router.get('/search', authMiddleware, userController.searchUser);
 
-// TODO: should all errors be handled by a middleware?
+// user details route
+router.get('/details', authMiddleware, userController.fetchUserInfo);
 
 module.exports = router;

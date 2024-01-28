@@ -22,4 +22,7 @@ router.get('/search/users', authMiddleware, timeMiddleware, groupController.sear
 // search chatroom groups route
 router.get('/search/chatrooms', authMiddleware, timeMiddleware, groupController.searchChatroomGroups);
 
+// fetch chatroom details route
+router.get('/details', authMiddleware, groupController.fetchChatroomInfo);
+
 module.exports = router;

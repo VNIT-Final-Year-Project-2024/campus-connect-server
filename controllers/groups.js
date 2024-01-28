@@ -525,8 +525,56 @@ const searchChatroomGroups = async (req, res) => {
     }
 };
 
+// fetch chatroom group details for a user based on group id provided
+const fetchChatroomInfo = async (req, res) => {
+
+    // validate request query params
+    const requiredParams = ['id'];
+
+    if (validateQueryParams(req, res, requiredParams)) {
+
+        let groupId = req.query.id;
+
+        // check if the provided groupId is a valid
+        if (!mongoose.Types.ObjectId.isValid(groupId)) {
+            return res.status(400).send({ error: 'invalid group ID provided' });
+        }
+
+        console.log(groupId);
+
+        try {
+            const group = await Group.findById(groupId);
+
+            if (!group) {
+                return res.status(404).send({ error: 'group not found' });
+            }
+
+            // check if the user is a member of the group
+            const isMember = group.members.some(member => member.id === req.user.id);
+
+            if (!isMember) {
+                return res.status(403).send({ message: 'not a member of the group' });
+            }
+
+            let { name, description, members, avatar, created_at } = group;
+
+            // mapping the results to a simplified JSON format
+            const groupInfo = {
+                name, description, members, avatar, created_at
+            };
+
+            return res.status(200).json(groupInfo);
+
+        } catch (error) {
+            console.error('Error while fetching group:', err);
+            return res.status(500).send('Internal server error');
+        }
+    }
+};
+
 module.exports = {
     newUserGroup, newChatroomGroup,
     showUserGroups, showChatroomGroups,
-    searchUserGroups, searchChatroomGroups
+    searchUserGroups, searchChatroomGroups,
+    fetchChatroomInfo
 }

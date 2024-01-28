@@ -46,8 +46,9 @@ const sendMessage = (req, res) => {
               timestamp: savedMessage.timestamp
             };
 
-            // update the group's recentMessage field
-            group.recentMessage = savedMessage.id;
+            // update the group's recent activity
+            group.recent_activity.message = savedMessage.id;
+            group.recent_activity.timestamp = savedMessage.timestamp;
 
             group.save()
               .then(updatedGroup => {

@@ -2,51 +2,24 @@ const mongoose = require('../utils/mongoConnector');
 const Group = require('../models/groups');
 const Message = require('../models/messages');
 
-const { executeQuery } = require('../utils/queryExectutor');
 const { validateRequest } = require('../utils/requestValidator');
 const { validateArray } = require('../utils/objArrayValidator');
 
 // create new group (add requesting user to the group)
 const newUserGroup = async (req, res) => {
-
     // validate request body
     let requiredFields = ['otherMember'];
 
     if (validateRequest(req, res, requiredFields)) {
-
-        let memberParams = ['id'];
+        let memberParams = ['id', 'name'];
         let members = [];
         members.push(req.body.otherMember);
-
-        let memberSize = members.length;
-        if (memberSize !== 1) {
-            res.status(400).send({ message: 'member not defined properly' });
-            return;
-        }
-
         if (validateArray(members, memberParams)) {
-
-            members.forEach((member) => {
-
-                // SQL query to find otherMember
-                let query = `SELECT name FROM user WHERE id = ${member.id} LIMIT 1`;
-
-                // using the executeQuery function
-                executeQuery(query, async (error, results) => {
-
-                    if (error) {
-                        res.status(500).json(error);
-                        return;
-                    }
-
-                    // other member not found
-                    if(results.length != 1) {
-                        res.status(200).send({ message: 'member has invalid id' });
-                    }
-
-                    member.name = results[0].name;
-                })
-            });
+            let memberSize = members.length;
+            if (memberSize !== 1) {
+                res.status(400).send({ message: 'member not defined properly' });
+                return;
+            }
 
             members.push({ id: req.user.id, name: req.user.name });
 
@@ -64,7 +37,7 @@ const newUserGroup = async (req, res) => {
                     }
                 });
 
-                if (groups.length !== 0) {
+                if (groups.length > 0) {
                     res.status(409).send({ message: 'user group already exists' });
                 } else {
                     let group = new Group({
@@ -74,7 +47,7 @@ const newUserGroup = async (req, res) => {
 
                     group.save()
                         .then(createdGroup => {
-                            console.log(`User: ${req.user.name} created a user group with User: ${req.body.otherMember.name}`);
+                            console.log('User:', req.user.name, 'created a user group with', req.body.otherMember.name,);
                             res.send({ status: 'success', groupId: createdGroup._id });
                         })
                         .catch(error => {
@@ -95,45 +68,19 @@ const newUserGroup = async (req, res) => {
 
 // create new group (add requesting user to the group)
 const newChatroomGroup = (req, res) => {
-
     // validate request body
     let requiredFields = ['name', 'desc', 'otherMembers'];
 
     if (validateRequest(req, res, requiredFields)) {
-
-        let memberParams = ['id'];
-
+        let memberParams = ['id', 'name'];
         if (validateArray(req.body.otherMembers, memberParams)) {
-
             let memberSize = req.body.otherMembers.length;
             if (memberSize === 0) {
                 res.status(400).send({ message: 'members not defined properly' });
                 return;
             }
-            
+
             let members = req.body.otherMembers;
-
-            members.forEach((member) => {
-
-                // SQL query to find otherMember
-                let query = `SELECT name FROM user WHERE id = ${member.id} LIMIT 1`;
-
-                // using the executeQuery function
-                executeQuery(query, async (error, results) => {
-                    if (error) {
-                        res.status(500).json(error);
-                        return;
-                    }
-                    
-                    // one of the other members not found
-                    if(results.length != 1) {
-                        res.status(200).send({ message: 'one of the members has invalid id' });
-                    }
-
-                    member.name = results[0].name;
-                })
-            });
-
             members.push({ id: req.user.id, name: req.user.name });
 
             let group = new Group({
@@ -145,14 +92,13 @@ const newChatroomGroup = (req, res) => {
 
             group.save()
                 .then(createdGroup => {
-                    console.log(`User: ${req.user.name} created a chatroom group: ${createdGroup.name}`);
+                    console.log('User: ', req.user.name, 'created a chatroom group: ', createdGroup.name);
                     res.send({ status: 'success', groupId: createdGroup._id });
                 })
                 .catch(error => {
                     console.error('Error creating chatroom group:', error);
                     res.status(500).send({ status: 'failed' });
                 });
-
         } else {
             res.status(400).send({ message: 'chatroom group not defined properly' });
         }
@@ -213,7 +159,6 @@ const showUserGroups = async (req, res) => {
 
         // map the results to the desired response structure
         const groups = recentUserMessages.map(({ _id, group_id, sender, content, timestamp }) => {
-
             const matchingGroup = matchingGroups.find(group =>
                 group._id.equals(group_id)
             );
@@ -341,7 +286,6 @@ const showChatroomGroups = async (req, res) => {
         } else {
             res.status(200).json({ status: 'success', groups: groups });
         }
-
     } catch (error) {
         console.error(error);
         res.status(500).json({ status: 'failed' });
@@ -450,7 +394,6 @@ const searchUserGroups = async (req, res) => {
             } else {
                 res.status(200).json({ status: 'success', groups: groups });
             }
-
         } catch (error) {
             console.error(error);
             res.status(500).json({ status: 'failed' });
@@ -542,7 +485,6 @@ const searchChatroomGroups = async (req, res) => {
                         },
                         avatar: avatar
                     };
-
                 } else {
                     // if no recent messages, include the group with created_at field
                     return {
@@ -559,7 +501,6 @@ const searchChatroomGroups = async (req, res) => {
             } else {
                 res.status(200).json({ status: 'success', groups: groups });
             }
-
         } catch (error) {
             console.error(error);
             res.status(500).json({ status: 'failed' });

@@ -45,6 +45,20 @@ const sendMessage = (req, res) => {
               content: savedMessage.content,
               timestamp: savedMessage.timestamp
             };
+
+            // update the group's recentMessage field
+            group.recentMessage = savedMessage.id;
+
+            group.save()
+              .then(updatedGroup => {
+                console.log('Recent message updated for group:', updatedGroup.id);
+              })
+              .catch(error => {
+                console.error('Error updating recent message for group:', error);
+                res.status(500).send({ status: 'failed' });
+                return;
+              });
+
             sendUpdateToGroup(req.body.groupId, msgUpdate);
             console.log('Message from user:', savedMessage.sender.name, 'sent:', `"${savedMessage.content}"`, 'to group:', groupId);
             res.send({ status: 'success' });

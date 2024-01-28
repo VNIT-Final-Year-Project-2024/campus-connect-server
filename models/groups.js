@@ -5,6 +5,7 @@ const groupSchema = new mongoose.Schema({
   is_chatroom: { type: Boolean },
   members: [{ id: Number, name: String }],
   description: { type: String },
+  recentMessage: { type: mongoose.Schema.Types.ObjectId, ref: 'Message' },
   avatar: { type: String },
   created_at: { type: Date, default: Date.now },
 });

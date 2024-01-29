@@ -166,14 +166,17 @@ const showUserGroups = async (req, res) => {
         // map the results to the response structure
         const groups = matchingGroups.map(matchingGroup => {
             const group_id = matchingGroup._id.toString();
+            const { id: otherUserId, name: otherUserName } = matchingGroup.members.find(member => member.id !== req.user.id);
             const avatar = matchingGroup.avatar;
-            const name = matchingGroup.name;
             const recentActivity = matchingGroup.recent_activity;
 
             const { _id, sender, content, timestamp } = recentActivity;
             return {
                 groupId: group_id,
-                name: name,
+                user: {
+                    id: otherUserId,
+                    name: otherUserName
+                },
                 recentMessage: {
                     messageId: _id.toString(),
                     sender: sender,

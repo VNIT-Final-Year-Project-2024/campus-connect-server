@@ -1,11 +1,10 @@
 const mongoose = require('../utils/mongoConnector');
 const Group = require('../models/groups');
-const Message = require('../models/messages');
 
 const { validateRequest } = require('../utils/requestValidator');
 const { validateArray } = require('../utils/objArrayValidator');
 
-const fetchApiPageSize = 3;
+const fetchApiPageSize = 20;
 
 // create new group (add requesting user to the group)
 const newUserGroup = async (req, res) => {

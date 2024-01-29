@@ -39,7 +39,7 @@ const newUserGroup = async (req, res) => {
                 });
 
                 if (groups.length > 0) {
-                    res.status(409).send({ message: 'user group already exists' });
+                    res.status(409).send({ message: 'user group already exists', groupId: groups[0].id });
                 } else {
                     let group = new Group({
                         is_chatroom: false,

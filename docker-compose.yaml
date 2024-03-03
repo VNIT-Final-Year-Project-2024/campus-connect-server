@@ -1,0 +1,33 @@
+version: '3'
+services:
+  serverapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+      - "3030:3030"
+    depends_on:
+      - mysql
+      - mongo
+
+  mysql:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: 'password'
+      MYSQL_DATABASE: 'campus-connect'
+      MYSQL_USER: 'mayur'
+      MYSQL_PASSWORD: 'password'
+    # command: --initialize-insecure=false --skip-name-resolve=false
+    volumes:
+      - ./sql-schema:/docker-entrypoint-initdb.d
+
+  mongo:
+    image: mongo:latest
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"
+
+volumes:
+  mongo-data:

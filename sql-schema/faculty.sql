@@ -1,5 +1,5 @@
 -- FACULTY schema
-CREATE TABLE faculty (
+CREATE TABLE IF NOT EXISTS faculty (
     id INT AUTO_INCREMENT PRIMARY KEY,
     faculty_id INT NOT NULL,
     dept VARCHAR(3) NOT NULL,

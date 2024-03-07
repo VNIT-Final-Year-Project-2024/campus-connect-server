@@ -23,6 +23,13 @@ const clubSchema = new mongoose.Schema({
             name: String,
         }
     }],
+    group_ids: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Group',
+            required: true
+        }
+    ],
     created_at: {
         type: Date,
         default: Date.now

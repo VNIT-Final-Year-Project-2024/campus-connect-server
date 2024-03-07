@@ -19,8 +19,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 const userRoute = require('./routes/userRoute');
 const messageRoute = require('./routes/messageRoute');
 const groupRoute = require('./routes/groupRoute');
+const healthRoute = require('./routes/healthRoute');
 app.use('/users', userRoute);
 app.use('/messages', messageRoute);
 app.use('/groups', groupRoute);
+app.use('/health', healthRoute);
 
 module.exports = app;

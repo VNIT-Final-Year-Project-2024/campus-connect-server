@@ -9,7 +9,12 @@ let io;
 
 // function to initialize Socket.IO server
 const initSocketIOServer = (server) => {
-    io = new Server(server);
+    io = new Server(server, {
+        cors: {
+            origin: process.env.CLIENT_URL,
+            methods: ["GET", "POST"]
+        }
+    });
 
     // Socket.IO auth middleware
     io.use((socket, next) => {

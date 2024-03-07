@@ -216,7 +216,7 @@ const searchUser = async (req, res) => {
     } else {
 
       // SQL query to find user
-      let query = `SELECT id, name, email, type, avatar FROM user WHERE name LIKE "${searchString}%" AND id != ${req.user.id} LIMIT 5`;
+      let query = `SELECT id, name, email, type, avatar FROM user WHERE name LIKE "%${searchString}%" AND id != ${req.user.id} LIMIT 5`;
       // using the executeQuery function
       executeQuery(query, async (error, results) => {
         if (error) {

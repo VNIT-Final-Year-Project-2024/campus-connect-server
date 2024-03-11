@@ -7,6 +7,5 @@ CREATE TABLE IF NOT EXISTS user (
     about VARCHAR(50) DEFAULT NULL,
     type VARCHAR(7) NOT NULL CHECK (type IN ('student', 'faculty')),
     avatar VARCHAR(255) DEFAULT NULL,
-    details INT DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

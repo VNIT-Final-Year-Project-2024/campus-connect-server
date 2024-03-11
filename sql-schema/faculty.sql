@@ -1,6 +1,5 @@
 -- FACULTY schema
 CREATE TABLE IF NOT EXISTS faculty (
-    id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL UNIQUE,
     dept VARCHAR(3) NOT NULL,
     designation VARCHAR(255) DEFAULT NULL,

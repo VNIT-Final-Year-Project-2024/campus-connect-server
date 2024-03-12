@@ -15,11 +15,11 @@ const clubSchema = new mongoose.Schema({
     },
     members: [{
         role: {
-            id: int,
+            id: Number,
             name: String
         },
         user: {
-            id: int,
+            id: Number,
             name: String,
         }
     }],
@@ -33,6 +33,10 @@ const clubSchema = new mongoose.Schema({
     created_at: {
         type: Date,
         default: Date.now
+    },
+    created_by: {
+        id: Number,
+        name: String,
     }
 });
 

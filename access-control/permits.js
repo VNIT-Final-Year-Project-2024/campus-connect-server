@@ -8,8 +8,7 @@ const permits = {
     DELETE_GROUP: 16,
     UPDATE_CLUB_DETAILS: 32,
     ADD_CLUB_MEMBER: 64,
-    CREATE_CLUB: 128,
-    DELETE_CLUB: 256
+    DELETE_CLUB: 128
 };
 
 module.exports = permits;

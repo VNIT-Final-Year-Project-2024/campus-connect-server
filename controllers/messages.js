@@ -4,6 +4,8 @@ const Group = require('../models/groups');
 const { validateRequest } = require('../utils/requestValidator');
 const { sendUpdateToGroup } = require('../socketApp');
 
+const fetchApiPageSize = 20;
+
 // send message into a group
 const sendMessage = (req, res) => {
 
@@ -89,7 +91,7 @@ const viewMessages = async (req, res) => {
 
   if (validateQueryParams(req, res, requiredParams)) {
 
-    let pageSize = 10;                                               // page size for messages
+    let pageSize = fetchApiPageSize;                                  // page size for messages
     let timestamp = new Date(req.timestamp);
 
     try {

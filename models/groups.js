@@ -8,6 +8,10 @@ const groupSchema = new mongoose.Schema({
   is_chatroom: { 
     type: Boolean 
   },
+  associated_club: {
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Club'
+  },
   members: [{ 
     id: Number, 
     name: String 

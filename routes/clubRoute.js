@@ -14,7 +14,7 @@ router.get('/view', authMiddleware, clubController.showAllClubs);
 router.get('/details', authMiddleware, clubController.fetchClubInfo);
 
 // send message inside club chatroom route
-router.post('/messages/send', authMiddleware, roleMiddleware, clubController.sendMessage);
+router.post('/messages/send', authMiddleware, clubController.sendMessage);
 
 // view messages inside club chatroom route
 router.get('/messages/view', authMiddleware, timeMiddleware, clubController.viewMessages);
@@ -25,7 +25,7 @@ router.post('/chatrooms/create', authMiddleware, clubController.newChatroomGroup
 // view chatrooms inside club route
 router.get('/chatrooms/view', authMiddleware, timeMiddleware, clubController.showChatroomGroups);
 
-// search chatroom inside club route
+// search chatrooms inside club route
 router.get('/chatrooms/search', authMiddleware, timeMiddleware, clubController.searchChatroomGroups);
 
 module.exports = router;

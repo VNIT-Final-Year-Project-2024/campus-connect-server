@@ -13,7 +13,7 @@ checkAccess = (req, res, clubId, permitMask) => {
         if (!club) {
             console.error('Club not found');
             res.status(404).send({ message: 'club does not exist' });
-            return;
+            return false;
         }
 
         let member = club.members.findOne(member => member.user.id === userId);
@@ -29,7 +29,7 @@ checkAccess = (req, res, clubId, permitMask) => {
             executeQuery(query, async (error, results) => {
             if (error) {
                 res.status(500).json(error);
-                return;
+                return false;
             } else {
                 console.log(`Permissions for User: ${req.body.name} fetched over Club: ${clubId}`);
                 permissions = results[0].permissions;
@@ -38,20 +38,21 @@ checkAccess = (req, res, clubId, permitMask) => {
 
             // apply permitMask using bitwise AND operation
             if (permissions & permitMask) {
-                return;
+                return true;
             } else {
                 res.status(403).send({ message: 'access to requested operation denied' });
-                return;
+                return false;
             }
 
         } else {
-            res.status(403).send({ message: 'not a member of the provided club' });    
+            res.status(403).send({ message: 'not a member of the provided club' });
+            return false;  
         }
 
     }).catch(error => {
         console.error('Error getting details of club:', error);
         res.status(500).send('Internal server error');
-        return;
+        return false;
     });
 }
 

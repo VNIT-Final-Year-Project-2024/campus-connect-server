@@ -2,7 +2,7 @@ const mongoose = require('../utils/mongoConnector');
 const Club = require('../models/clubs');
 const Group = require('../models/groups');
 
-const { permits } = require('../access-control/permits');
+const permits = require('../access-control/permits.json');
 
 const { validateRequest } = require('../utils/requestValidator');
 const { validateQueryParams } = require('../utils/queryParamValidator');
@@ -109,9 +109,16 @@ const fetchClubInfo = async (req, res) => {
 
     if (validateQueryParams(req, res, requiredParams)) {
         try {
-            let clubId = req.query.id;
+            let clubId = req.query.clubId;
+
             let club = await Club.findById(clubId);
+            if(!club) {
+                res.status(404).json({ message: 'club not found' });
+                return;
+            }
+
             let { name, description, members, created_at: createdAt } = club;
+
             let clubInfo = {
                 id: clubId,
                 name,
@@ -119,7 +126,9 @@ const fetchClubInfo = async (req, res) => {
                 members,
                 createdAt
             };
+
             res.status(200).json(clubInfo);
+
         } catch (error) {
             console.error('Error fetching club info:', error);
             res.status(500).json(error);
@@ -154,52 +163,56 @@ const sendMessage = (req, res) => {
             let clubId = group.associated_club;
 
             // RBAC - send message
-            checkAccess(req, res, clubId, permits.SEND_MESSAGE);
-    
-            if (group.members.some(member => member.id === req.user.id)) {
-                let message = new Message({
-                    group_id: groupId,
-                    sender: {
-                    id: req.user.id,
-                    name: req.user.name
-                    },
-                    content: req.body.content
-                });
-        
-                message.save()
-                    .then(savedMessage => {
-                        let msgUpdate = {
-                            messageId: savedMessage.id,
-                            sender: savedMessage.sender,
-                            content: savedMessage.content,
-                            timestamp: savedMessage.timestamp
-                        };
-            
-                        // update the group's recent activity
-                        group.recent_activity.message = savedMessage.id;
-                        group.recent_activity.timestamp = savedMessage.timestamp;
-            
-                        group.save()
-                            .then(updatedGroup => {
-                            console.log('Recent message updated for group:', updatedGroup.id);
-                            })
-                            .catch(error => {
-                            console.error('Error updating recent message for group:', error);
-                            res.status(500).send({ status: 'failed' });
-                            return;
-                            });
-            
-                        sendUpdateToGroup(req.body.groupId, msgUpdate);
-                        console.log('Message from user:', savedMessage.sender.name, 'sent:', `"${savedMessage.content}"`, 'to group:', groupId);
-                        res.send({ status: 'success' });
-                    })
-                    .catch(error => {
-                        console.error('Error saving message:', error);
-                        res.status(500).send({ status: 'failed' });
+            if (checkAccess(req, res, clubId, permits.SEND_MESSAGE))
+            {
+                if (group.members.some(member => member.id === req.user.id)) {
+                    let message = new Message({
+                        group_id: groupId,
+                        sender: {
+                        id: req.user.id,
+                        name: req.user.name
+                        },
+                        content: req.body.content
                     });
-    
+            
+                    message.save()
+                        .then(savedMessage => {
+                            let msgUpdate = {
+                                messageId: savedMessage.id,
+                                sender: savedMessage.sender,
+                                content: savedMessage.content,
+                                timestamp: savedMessage.timestamp
+                            };
+                
+                            // update the group's recent activity
+                            group.recent_activity.message = savedMessage.id;
+                            group.recent_activity.timestamp = savedMessage.timestamp;
+                
+                            group.save()
+                                .then(updatedGroup => {
+                                console.log('Recent message updated for group:', updatedGroup.id);
+                                })
+                                .catch(error => {
+                                console.error('Error updating recent message for group:', error);
+                                res.status(500).send({ status: 'failed' });
+                                return;
+                                });
+                
+                            sendUpdateToGroup(req.body.groupId, msgUpdate);
+                            console.log('Message from user:', savedMessage.sender.name, 'sent:', `"${savedMessage.content}"`, 'to group:', groupId);
+                            res.send({ status: 'success' });
+                        })
+                        .catch(error => {
+                            console.error('Error saving message:', error);
+                            res.status(500).send({ status: 'failed' });
+                        });
+        
+                } else {
+                res.status(403).send({ message: 'not a member of the provided group' });
+                }
             } else {
-            res.status(403).send({ message: 'not a member of the provided group' });
+                // response sent through access controller
+                return;
             }
     
         }).catch(error => {
@@ -284,40 +297,44 @@ const newChatroomGroup = (req, res) => {
         let clubId = req.body.clubId;
 
         // RBAC - create group
-        checkAccess(req, res, clubId, permits.CREATE_GROUP);
+        if (checkAccess(req, res, clubId, permits.CREATE_GROUP))
+        {
+            let memberParams = ['id', 'name'];
+            if (validateArray(req.body.otherMembers, memberParams)) {
 
-        let memberParams = ['id', 'name'];
-        if (validateArray(req.body.otherMembers, memberParams)) {
+                let memberSize = req.body.otherMembers.length;
+                if (memberSize === 0) {
+                    res.status(400).send({ message: 'members not defined properly' });
+                    return;
+                }
 
-            let memberSize = req.body.otherMembers.length;
-            if (memberSize === 0) {
-                res.status(400).send({ message: 'members not defined properly' });
-                return;
-            }
+                let members = req.body.otherMembers;
+                members.push({ id: req.user.id, name: req.user.name });
 
-            let members = req.body.otherMembers;
-            members.push({ id: req.user.id, name: req.user.name });
-
-            let group = new Group({
-                name: req.body.name,
-                is_chatroom: true,
-                associated_club: req.body.clubId,
-                members: members,
-                description: req.body.desc,
-            })
-
-            group.save()
-                .then(createdGroup => {
-                    console.log('User: ', req.user.name, 'created a chatroom group: ', createdGroup.name, 'inside club:', req.body.clubId);
-                    res.send({ status: 'success', groupId: createdGroup._id });
+                let group = new Group({
+                    name: req.body.name,
+                    is_chatroom: true,
+                    associated_club: req.body.clubId,
+                    members: members,
+                    description: req.body.desc,
                 })
-                .catch(error => {
-                    console.error('Error creating chatroom group:', error);
-                    res.status(500).send({ status: 'failed' });
-                });
 
+                group.save()
+                    .then(createdGroup => {
+                        console.log('User: ', req.user.name, 'created a chatroom group: ', createdGroup.name, 'inside club:', req.body.clubId);
+                        res.send({ status: 'success', groupId: createdGroup._id });
+                    })
+                    .catch(error => {
+                        console.error('Error creating chatroom group:', error);
+                        res.status(500).send({ status: 'failed' });
+                    });
+
+            } else {
+                res.status(400).send({ message: 'chatroom group not defined properly' });
+            }
         } else {
-            res.status(400).send({ message: 'chatroom group not defined properly' });
+            // response sent through access controller
+            return;
         }
     }
 }

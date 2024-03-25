@@ -91,34 +91,58 @@ const viewMessages = async (req, res) => {
 
   if (validateQueryParams(req, res, requiredParams)) {
 
-    let pageSize = fetchApiPageSize;                                  // page size for messages
-    let timestamp = new Date(req.timestamp);
+    let groupId = req.query.groupId;
 
+    // check membership of user against the provided group
     try {
-      const results = await Message.find({
-        group_id: req.query.groupId,
-        timestamp: { $lt: timestamp }                                 // retrieve messages older than the provided timestamp
-      })
-        .sort({ timestamp: -1 })
-        .limit(pageSize)
-        .select('_id sender content timestamp');
+      const group = await Group.findById(groupId);
 
-      if (results.length === 0) {
-        res.status(200).json({ status: 'empty' });
-      } else {
-
-        const messages = results.map(({ _id, sender, content, timestamp }) => ({
-          messageId: _id,
-          sender: sender,
-          content: content,
-          timestamp: timestamp
-        }));
-
-        res.status(200).json({ status: 'success', messages: messages });
+      if (!group) {
+        console.error('Group not found');
+        res.status(404).send({ message: 'group does not exist' });
+        return;
       }
+
+      if (group.members.some(member => member.id === req.user.id)) {
+
+        let pageSize = fetchApiPageSize;                            // page size for messages
+        let timestamp = new Date(req.timestamp);
+
+        try {
+          const results = await Message.find({
+            group_id: req.query.groupId,
+            timestamp: { $lt: timestamp }                           // retrieve messages older than the provided timestamp
+          })
+            .sort({ timestamp: -1 })
+            .limit(pageSize)
+            .select('_id sender content timestamp');
+
+          if (results.length === 0) {
+            res.status(200).json({ status: 'empty' });
+          } else {
+
+            const messages = results.map(({ _id, sender, content, timestamp }) => ({
+              messageId: _id,
+              sender: sender,
+              content: content,
+              timestamp: timestamp
+            }));
+
+            res.status(200).json({ status: 'success', messages: messages });
+          }
+        } catch (error) {
+          console.error(error);
+          res.status(500).send({ status: 'failed' });
+        }
+
+      } else {
+        res.status(403).send({ message: 'not a member of the provided group' });
+      }
+
     } catch (error) {
-      console.error(error);
-      res.status(500).send({ status: 'failed' });
+      console.error('Error getting details of group:', error);
+      res.status(500).send('Internal server error');
+      return;
     }
   }
 }

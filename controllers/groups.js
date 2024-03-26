@@ -211,7 +211,8 @@ const showChatroomGroups = async (req, res) => {
             {
                 $match: {
                     'members.id': userId,
-                    is_chatroom: true
+                    is_chatroom: true,
+                    associated_club: { $exists: false }                     // not associated with any club
                 }
             },
             {
@@ -430,6 +431,7 @@ const searchChatroomGroups = async (req, res) => {
                     $match: {
                         'members.id': userId,
                         is_chatroom: true,
+                        associated_club: { $exists: false },                        // not associated with any club
                         name: { $regex: searchString, $options: 'i' }               // case-insensitive search
                     }
                 },

@@ -1,7 +1,7 @@
 -- FACULTY schema
 CREATE TABLE IF NOT EXISTS faculty (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    faculty_id INT NOT NULL,
+    user_id INT NOT NULL UNIQUE,
     dept VARCHAR(3) NOT NULL,
-    designation VARCHAR(255) DEFAULT NULL
+    designation VARCHAR(255) DEFAULT NULL,
+    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
 );

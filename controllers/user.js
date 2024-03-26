@@ -36,7 +36,7 @@ const verifyStudent = (req, res) => {
 const verifyFaculty = (req, res) => {
 
   // validate request body
-  let requiredFields = ['emailPrefix', 'name', 'password', 'facultyId', 'dept'];
+  let requiredFields = ['emailPrefix', 'name', 'password', 'dept', 'designation'];
 
   if (validateRequest(req, res, requiredFields)) {
 
@@ -74,8 +74,8 @@ const addStudent = async (req, res) => {
       let passwordHash = await bcrypt.hash(password, 10);
       let email = emailPrefix + '@students.vnit.ac.in';
 
-      // SQL query to insert student metadata
-      let query1 = `INSERT INTO student (student_id, dept) VALUES ("${studentId}", "${dept.toUpperCase()}");`;
+      // SQL query to insert user data
+      let query1 = `INSERT INTO user (email, name, password, type) VALUES ("${email}", "${name}", "${passwordHash}", "student");`;
       // using the executeQuery function
       executeQuery(query1, (error, results) => {
         if (error) {
@@ -84,8 +84,8 @@ const addStudent = async (req, res) => {
         }
 
         let { insertId: rowId } = results;
-        // SQL query to insert user data
-        let query2 = `INSERT INTO user (email, name, password, details, type) VALUES ("${email}", "${name}", "${passwordHash}", "${rowId}", "student");`;
+        // SQL query to insert student metadata
+        let query2 = `INSERT INTO student (user_id, student_id, dept) VALUES ("${rowId}", "${studentId}", "${dept.toUpperCase()}");`;
         // using the executeQuery function
         executeQuery(query2, (error, results) => {
           if (error) {
@@ -111,12 +111,12 @@ const addFaculty = async (req, res) => {
     let user = otpGen.checkOtp(req, res);
 
     if (user) {
-      var { facultyId, emailPrefix, dept, name, password } = user;
+      var { emailPrefix, dept, name, designation, password } = user;
       let passwordHash = await bcrypt.hash(password, 10);
       let email = emailPrefix + '@' + user.dept + '.vnit.ac.in';
 
-      // SQL query to insert faculty metadata
-      let query1 = `INSERT INTO faculty (faculty_id, dept) VALUES ("${facultyId}", "${dept.toUpperCase()}");`;
+      // SQL query to insert user data
+      let query1 = `INSERT INTO user (email, name, password, type) VALUES ("${email}", "${name}", "${passwordHash}", "faculty");`;
       // using the executeQuery function
       executeQuery(query1, (error, results) => {
         if (error) {
@@ -125,8 +125,8 @@ const addFaculty = async (req, res) => {
         }
 
         let { insertId: rowId } = results;
-        // SQL query to insert user data
-        let query2 = `INSERT INTO user (email, name, password, details, type) VALUES ("${email}", "${name}", "${passwordHash}", "${rowId}", "faculty");`;
+        // SQL query to insert faculty metadata
+        let query2 = `INSERT INTO faculty (user_id, dept, designation) VALUES ("${rowId}", "${dept.toUpperCase()}", "${designation}");`;
         // using the executeQuery function
         executeQuery(query2, (error, results) => {
           if (error) {
@@ -258,7 +258,7 @@ const fetchUserInfo = async (req, res) => {
 
       if (result1[0].type === 'student') {
         // SQL query to find student details
-        let query2 = `SELECT dept, student_id FROM student WHERE id = ${result1[0].details} LIMIT 1`;
+        let query2 = `SELECT dept, student_id, designation FROM student WHERE user_id = ${userId} LIMIT 1`;
         executeQuery(query2, async (error, result2) => {
           if (error) {
             res.status(500).json(error);
@@ -266,18 +266,18 @@ const fetchUserInfo = async (req, res) => {
           }
 
           let { name, email, type, about, avatar } = result1[0];
-          let { dept, student_id: studentId } = result2[0];
+          let { dept, student_id: studentId, designation } = result2[0];
 
           // mapping the results to a simplified JSON format
           const user = {
-            name, email, type, dept, studentId, about, avatar
+            name, email, type, dept, studentId, designation, about, avatar
           };
     
           res.status(200).json(user);
         })
       } else {
         // SQL query to find faculty details
-        let query2 = `SELECT dept, designation FROM faculty WHERE id = ${result1[0].details} LIMIT 1`;
+        let query2 = `SELECT dept, designation FROM faculty WHERE user_id = ${userId} LIMIT 1`;
         executeQuery(query2, async (error, result2) => {
           if (error) {
             res.status(500).json(error);
